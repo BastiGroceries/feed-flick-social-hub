@@ -1,12 +1,14 @@
 
 import { usePosts } from "../contexts/PostsContext";
 import PostCard from "../components/PostCard";
+import StoriesSection from "../components/StoriesSection";
 
 export default function Feed() {
   const { posts } = usePosts();
   
   return (
     <div className="container py-6 max-w-3xl">
+      <StoriesSection />
       <div className="space-y-6">
         {posts.length > 0 ? (
           posts.map((post) => (
