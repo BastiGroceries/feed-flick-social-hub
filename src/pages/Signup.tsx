@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "../contexts/AuthContext";
 import { Label } from "@/components/ui/label";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -16,12 +16,36 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [passwordValidation, setPasswordValidation] = useState({
+    length: false,
+    match: false
+  });
+  
   const { signup } = useAuth();
   const navigate = useNavigate();
 
   const validatePassword = (pass: string) => {
-    if (pass.length < 6) return false;
-    return true;
+    setPasswordValidation(prev => ({
+      ...prev,
+      length: pass.length >= 6
+    }));
+    
+    if (confirmPassword) {
+      setPasswordValidation(prev => ({
+        ...prev,
+        match: pass === confirmPassword
+      }));
+    }
+    
+    return pass.length >= 6;
+  };
+  
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmPassword(value);
+    setPasswordValidation(prev => ({
+      ...prev,
+      match: password === value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,11 +130,18 @@ export default function Signup() {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
+                  validatePassword(e.target.value);
                   setPasswordError("");
                 }}
                 required
                 className={passwordError ? "border-destructive" : ""}
               />
+              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                {passwordValidation.length ? 
+                  <Check size={14} className="text-green-500" /> : 
+                  <X size={14} className="text-red-500" />}
+                Password must be at least 6 characters
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -120,12 +151,20 @@ export default function Signup() {
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => {
-                  setConfirmPassword(e.target.value);
+                  handleConfirmPasswordChange(e.target.value);
                   setPasswordError("");
                 }}
                 required
                 className={passwordError ? "border-destructive" : ""}
               />
+              {confirmPassword && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  {passwordValidation.match ? 
+                    <Check size={14} className="text-green-500" /> : 
+                    <X size={14} className="text-red-500" />}
+                  Passwords must match
+                </div>
+              )}
               {passwordError && (
                 <p className="text-sm text-destructive">{passwordError}</p>
               )}
@@ -137,7 +176,7 @@ export default function Signup() {
           <CardFooter className="flex flex-col space-y-4">
             <Button 
               className="w-full bg-gradient-to-r from-instagram-primary to-instagram-secondary hover:opacity-90"
-              disabled={isLoading || password.length < 6}
+              disabled={isLoading || !passwordValidation.length || (confirmPassword && !passwordValidation.match)}
               type="submit"
             >
               {isLoading ? "Creating account..." : "Sign up"}
